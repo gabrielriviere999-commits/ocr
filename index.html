@@ -111,6 +111,7 @@
     var worker = null;
     var workerLanguage = null;
     var scale = 1;
+    var displayScale = 1;
     var selecting = false;
     var selection = null;
     var selectionStartX = 0;
@@ -222,42 +223,55 @@
     function drawImage() {
         var width;
         var height;
-        var baseScale;
         var containerHeight;
+        var fitScale;
         if (!imageLoaded) {
             return;
         }
-        containerHeight = imageContainer.clientHeight;
-        if (!containerHeight) {
-            containerHeight = 500;
-        }
-        // Taille minimale pour que l'image remplisse la hauteur du conteneur.
-        baseScale = containerHeight / image.naturalHeight;
-        // scale = zoom choisi par l'utilisateur. 1 = taille normale par rapport à la hauteur du conteneur.
-        width = Math.round(image.naturalWidth * baseScale * scale);
-        height = Math.round(image.naturalHeight * baseScale * scale);
+        // Le canvas conserve TOUJOURS la résolution originale.
+        width = image.naturalWidth;
+        height = image.naturalHeight;
         canvas.width = width;
         canvas.height = height;
         selectionCanvas.width = width;
         selectionCanvas.height = height;
         ctx.clearRect(0, 0, width, height);
+        // Image originale, sans réduction.
         ctx.drawImage(image, 0, 0, width, height);
+        // Calcul de la taille d'affichage. On adapte l'image à la hauteur du conteneur.
+        containerHeight = imageContainer.clientHeight;
+        if (!containerHeight) {
+            containerHeight = 500;
+        }
+        fitScale = containerHeight / height;
+        // Le zoom est appliqué uniquement à l'affichage.
+        displayScale = fitScale * scale;
+        canvas.style.width = Math.round(width * displayScale) + "px";
+        canvas.style.height = Math.round(height * displayScale) + "px";
+        selectionCanvas.style.width = Math.round(width * displayScale) + "px";
+        selectionCanvas.style.height = Math.round(height * displayScale) + "px";
         drawSelection();
     }
     /* Zoom */
     function updateZoom() {
         var value = parseInt(zoom.value, 10);
+        var width;
+        var height;
         if (!value) {
             value = 100;
         }
         zoomValue.innerHTML = value + "%";
-        // Zoom visuel uniquement pendant le déplacement. L'image n'est pas redessinée à chaque mouvement.
-        if (canvas.width && canvas.height) {
-            canvas.style.width = Math.round(canvas.width * value / 100) + "px";
-            canvas.style.height = Math.round(canvas.height * value / 100) + "px";
-            selectionCanvas.style.width = Math.round(selectionCanvas.width * value / 100) + "px";
-            selectionCanvas.style.height = Math.round(selectionCanvas.height * value / 100) + "px";
+        if (!imageLoaded) {
+            return;
         }
+        // On ne redessine PAS le canvas. On change seulement sa taille d'affichage.
+        displayScale = (imageContainer.clientHeight / image.naturalHeight) * (value / 100);
+        width = Math.round(image.naturalWidth * displayScale);
+        height = Math.round(image.naturalHeight * displayScale);
+        canvas.style.width = width + "px";
+        canvas.style.height = height + "px";
+        selectionCanvas.style.width = width + "px";
+        selectionCanvas.style.height = height + "px";
     }
     /* Sélection */
     function startSelection(x, y) {
@@ -484,11 +498,7 @@
             value = 100;
         }
         scale = value / 100;
-        canvas.style.width = "";
-        canvas.style.height = "";
-        selectionCanvas.style.width = "";
-        selectionCanvas.style.height = "";
-        drawImage();
+        updateZoom();
     };
     ocrButton.onclick = function () {
         runOCR(false);
