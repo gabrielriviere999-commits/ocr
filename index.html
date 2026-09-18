@@ -74,7 +74,6 @@
       <option value="por">Portugais</option-->
     </select>
     <button id="ocrButton">Tout le texte</button>
-    <button id="ocrSelectionButton">Sélection</button>
     <button id="copyoutput">Copier</button>
     <progress id="progress" value="0" max="100"></progress>
     <div id="status">Tesseract.js non initialisé.</div>
@@ -87,14 +86,22 @@
   <h3>Texte extrait</h3>
   <textarea id="output"></textarea>
 </div>
+<div id="popupResultContent" style="display:none">
+  <b class="titleb">Texte reconnu</b><hr class="titlehr">
+  <textarea id="popupResultText"></textarea>
+  <div style="margin-top:5px;">
+    <button id="copyPopupResultText">Copier</button>
+    <button onclick="closePopup()">Fermer</button>
+  </div>
+</div>
 <script src="../outils/outils.js"></script>
+<script src="../outils/popup.js"></script>
 <script src="libs/tesseract/tesseract.min.js"></script>
 <script>
 (function () {
     "use strict";
     var imageFile = document.getElementById("imageFile");
     var ocrButton = document.getElementById("ocrButton");
-    var ocrSelectionButton = document.getElementById("ocrSelectionButton");
     var resetButton = document.getElementById("resetButton");
     var language = document.getElementById("language");
     var progress = document.getElementById("progress");
@@ -309,8 +316,18 @@
         drawSelection();
     }
     function endSelection() {
+        if (!selecting) {
+            return;
+        }
         selecting = false;
         drawSelection();
+        if (
+            selection &&
+            selection.width > 2 &&
+            selection.height > 2
+        ) {
+            runOCR(true);
+        }
     }
     function drawSelection() {
         var x;
@@ -378,9 +395,16 @@
             return;
         }
         event.preventDefault();
-        var p =     getCanvasPosition(event);
+        var p = getCanvasPosition(event);
         updateSelection(p.x, p.y);
         endSelection();
+    }
+    /* Popup du résultat OCR */
+    function openResultPopup() {
+        var container = document.getElementById("popupResultContent");
+        var popupText = document.getElementById("popupResultText");
+        popupText.value = result.value;
+        openPopupMenu(container);
     }
     /* OCR */
     function getOCRCanvas(useSelection) {
@@ -444,6 +468,7 @@
                 result.value = text;
                 setProgress(100);
                 setStatus("Reconnaissance terminée.");
+                openResultPopup();
             })
             .catch(function (error) {
                 setStatus("Erreur OCR : " + error);
@@ -503,9 +528,6 @@
     };
     ocrButton.onclick = function () {
         runOCR(false);
-    };
-    ocrSelectionButton.onclick = function () {
-        runOCR(true);
     };
     resetButton.onclick = resetAll;
     /* Sélection souris */
