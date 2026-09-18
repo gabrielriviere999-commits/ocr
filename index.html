@@ -19,6 +19,7 @@
   display:block;
   margin:0;
   background:#222;
+  touch-action:none;
   cursor:crosshair;
 }
 #selectionCanvas {
@@ -90,14 +91,17 @@
   <b class="titleb">Texte reconnu</b><hr class="titlehr">
   <textarea id="popupResultText" wrap="off"></textarea>
   <div style="margin-top:5px;">
-    <button id="copyPopupResultText">Copier</button>
-    <button onclick="closePopup()">Fermer</button>
+    <button data-action="copyPopupResultText">Copier</button>
+    <button data-action="closePopup">Fermer</button>
   </div>
 </div>
 <script src="../outils/outils.js"></script>
 <script src="../outils/popup.js"></script>
+<script src="../outils/multitouch.js"></script>
 <script src="libs/tesseract/tesseract.min.js"></script>
 <script>
+addMultiTouch("#popupResultContent button");
+function copyPopupResultText(){var btn=document.activeElement;copyTextarea("popupResultText", btn);setTimeout(function(){btn.focus();},0);}
 (function () {
     "use strict";
     var imageFile = document.getElementById("imageFile");
@@ -122,6 +126,7 @@
     var displayScale = 1;
     var selecting = false;
     var selection = null;
+    var selectionTouchId = null;
     var selectionStartX = 0;
     var selectionStartY = 0;
     /* Chemins Tesseract.js 5 LOCAUX */
@@ -373,6 +378,15 @@
                 (rect.height / canvas.height)
         };
     }
+    function getTouchPosition(touch) {
+        var rect = canvas.getBoundingClientRect();
+        return {
+            x: (touch.clientX - rect.left) /
+               (rect.width / canvas.width),
+            y: (touch.clientY - rect.top) /
+               (rect.height / canvas.height)
+        };
+    }
     /* Souris */
     function mouseDown(event) {
         if (!imageLoaded) {
@@ -561,24 +575,46 @@
         if (!imageLoaded) {
             return;
         }
-        event.preventDefault();
-        var p = getCanvasPosition(event);
+        var touch = event.changedTouches[0];
+        selectionTouchId = touch.identifier;
+        var p = getTouchPosition(touch);
         startSelection(p.x, p.y);
     };
     canvas.ontouchmove = function (event) {
         if (!selecting) {
             return;
         }
-        event.preventDefault();
-        var p = getCanvasPosition(event);
+        var i;
+        var touch = null;
+        for (i = 0; i < event.touches.length; i++) {
+            if (
+                event.touches[i].identifier === selectionTouchId
+            ) {
+                touch = event.touches[i];
+                break;
+            }
+        }
+        if (!touch) {
+            return;
+        }
+        var p = getTouchPosition(touch);
         updateSelection(p.x, p.y);
     };
     canvas.ontouchend = function (event) {
-        if (!selecting) {
-            return;
-        }
-        event.preventDefault();
-        endSelection();
+       var i;
+       for (i = 0; i < event.changedTouches.length; i++) {
+           if (
+               event.changedTouches[i].identifier === selectionTouchId
+           ) {
+               selectionTouchId = null;
+               endSelection();
+               break;
+           }
+       }
+   };
+    canvas.ontouchcancel = function () {
+        selectionTouchId = null;
+        selecting = false;
     };
     /* Nettoyage */
     window.onbeforeunload = function () {
