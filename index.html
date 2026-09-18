@@ -127,6 +127,9 @@ function copyPopupResultText(){var btn=document.activeElement;copyTextarea("popu
     var selecting = false;
     var selection = null;
     var selectionTouchId = null;
+    var autoScrollTimer = null;
+    var lastTouchX = 0;
+    var lastTouchY = 0;
     var selectionStartX = 0;
     var selectionStartY = 0;
     /* Chemins Tesseract.js 5 LOCAUX */
@@ -387,6 +390,48 @@ function copyPopupResultText(){var btn=document.activeElement;copyTextarea("popu
                (rect.height / canvas.height)
         };
     }
+    function updateAutoScroll(touch) {
+        var rect = imageContainer.getBoundingClientRect();
+        var margin = 25;
+        var speed = 8;
+        lastTouchX = touch.clientX;
+        lastTouchY = touch.clientY;
+        if (autoScrollTimer) {
+            return;
+        }
+        autoScrollTimer = setInterval(function () {
+            var moved = false;
+            if (lastTouchX < rect.left + margin) {
+                imageContainer.scrollLeft -= speed;
+                moved = true;
+            }
+            if (lastTouchX > rect.right - margin) {
+                imageContainer.scrollLeft += speed;
+                moved = true;
+            }
+            if (lastTouchY < rect.top + margin) {
+                imageContainer.scrollTop -= speed;
+                moved = true;
+            }
+            if (lastTouchY > rect.bottom - margin) {
+                imageContainer.scrollTop += speed;
+                moved = true;
+            }
+            if (moved && selecting) {
+                var p = getTouchPosition({
+                    clientX: lastTouchX,
+                    clientY: lastTouchY
+                });
+                updateSelection(p.x, p.y);
+            }
+        }, 16);
+    }
+    function stopAutoScroll() {
+        if (autoScrollTimer) {
+            clearInterval(autoScrollTimer);
+            autoScrollTimer = null;
+        }
+    }
     /* Souris */
     function mouseDown(event) {
         if (!imageLoaded) {
@@ -560,6 +605,7 @@ function copyPopupResultText(){var btn=document.activeElement;copyTextarea("popu
         event.preventDefault();
         var p = getCanvasPosition(event);
         updateSelection(p.x, p.y);
+        updateAutoScroll(touch);
     };
     document.onmouseup = function (event) {
         if (!selecting) {
@@ -568,6 +614,7 @@ function copyPopupResultText(){var btn=document.activeElement;copyTextarea("popu
         event.preventDefault();
         var p = getCanvasPosition(event);
         updateSelection(p.x, p.y);
+        stopAutoScroll();
         endSelection();
     };
     /* Sélection tactile */
@@ -599,6 +646,7 @@ function copyPopupResultText(){var btn=document.activeElement;copyTextarea("popu
         }
         var p = getTouchPosition(touch);
         updateSelection(p.x, p.y);
+        updateAutoScroll(touch);
     };
     canvas.ontouchend = function (event) {
        var i;
@@ -607,12 +655,14 @@ function copyPopupResultText(){var btn=document.activeElement;copyTextarea("popu
                event.changedTouches[i].identifier === selectionTouchId
            ) {
                selectionTouchId = null;
+               stopAutoScroll();
                endSelection();
                break;
            }
        }
    };
     canvas.ontouchcancel = function () {
+        stopAutoScroll();
         selectionTouchId = null;
         selecting = false;
     };
