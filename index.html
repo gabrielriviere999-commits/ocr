@@ -588,7 +588,11 @@
             }
         };
     /* État initial */
-    setStatus("Prêt. Chargez une image.");
+    // setStatus("Prêt. Chargez une image.");
+    /* Chargement de Tesseract au démarrage */
+    window.onload = function () {
+        createOCRWorker(language.value);
+    };
 })();
 </script>
 </body>
