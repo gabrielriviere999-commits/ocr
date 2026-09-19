@@ -383,21 +383,12 @@ function copyPopupResultText(){var btn=document.activeElement;copyTextarea("popu
                 (rect.height / canvas.height)
         };
     }
-    function getTouchPosition(touch) {
-        var rect = canvas.getBoundingClientRect();
-        return {
-            x: (touch.clientX - rect.left) /
-               (rect.width / canvas.width),
-            y: (touch.clientY - rect.top) /
-               (rect.height / canvas.height)
-        };
-    }
-    function updateAutoScroll(touch) {
+    function updateAutoScroll(pointer) {
         var rect = imageContainer.getBoundingClientRect();
         var margin = 25;
         var speed = 8;
-        lastTouchX = touch.clientX;
-        lastTouchY = touch.clientY;
+        lastTouchX = pointer.clientX;
+        lastTouchY = pointer.clientY;
         if (autoScrollTimer) {
             return;
         }
@@ -420,7 +411,7 @@ function copyPopupResultText(){var btn=document.activeElement;copyTextarea("popu
                 moved = true;
             }
             if (moved && selecting) {
-                var p = getTouchPosition({
+                var p = getCanvasPosition({
                     clientX: lastTouchX,
                     clientY: lastTouchY
                 });
@@ -607,9 +598,12 @@ function copyPopupResultText(){var btn=document.activeElement;copyTextarea("popu
         event.preventDefault();
         var p = getCanvasPosition(event);
         updateSelection(p.x, p.y);
-        updateAutoScroll(touch);
+        updateAutoScroll({
+            clientX: event.clientX,
+            clientY: event.clientY
+        });
     };
-    document.onmouseup = function (event) {
+    canvas.onmouseup = function (event) {
         if (!selecting) {
             return;
         }
@@ -619,26 +613,47 @@ function copyPopupResultText(){var btn=document.activeElement;copyTextarea("popu
         stopAutoScroll();
         endSelection();
     };
-    /* Sélection tactile */
-    canvas.ontouchstart = function (event) {
-        if (!imageLoaded) {
-            return;
-        }
-        var touch = event.changedTouches[0];
-        selectionTouchId = touch.identifier;
-        var p = getTouchPosition(touch);
-        startSelection(p.x, p.y);
-    };
-    canvas.ontouchmove = function (event) {
+    // Si le doigt ou la souris sort du canvas pendant la sélection
+    document.addEventListener("mousemove", function (event) {
         if (!selecting) {
             return;
         }
-        var i;
+        if (event.target === canvas) {
+            return;
+        }
+        canvas.onmousemove(event);
+    });
+    document.onmouseup = function (event) {
+        if (!selecting) {
+            return;
+        }
+        canvas.onmouseup(event);
+    };
+    /* Sélection tactile */
+    var touchEnabled = true;
+    var selectionTouchId = null;
+    canvas.addEventListener("touchstart", function (event) {
+        if (!touchEnabled || !imageLoaded) {
+            return;
+        }
+        event.preventDefault();
+        var touch = event.changedTouches[0];
+        selectionTouchId = touch.identifier;
+        canvas.onmousedown({
+            clientX: touch.clientX,
+            clientY: touch.clientY,
+            preventDefault: function () {}
+        });
+    }, { passive: false });
+    canvas.addEventListener("touchmove", function (event) {
+        if (!touchEnabled) {
+            return;
+        }
+        event.preventDefault();
         var touch = null;
+        var i;
         for (i = 0; i < event.touches.length; i++) {
-            if (
-                event.touches[i].identifier === selectionTouchId
-            ) {
+            if (event.touches[i].identifier === selectionTouchId) {
                 touch = event.touches[i];
                 break;
             }
@@ -646,28 +661,45 @@ function copyPopupResultText(){var btn=document.activeElement;copyTextarea("popu
         if (!touch) {
             return;
         }
-        var p = getTouchPosition(touch);
-        updateSelection(p.x, p.y);
-        updateAutoScroll(touch);
-    };
-    canvas.ontouchend = function (event) {
-       var i;
-       for (i = 0; i < event.changedTouches.length; i++) {
-           if (
-               event.changedTouches[i].identifier === selectionTouchId
-           ) {
-               selectionTouchId = null;
-               stopAutoScroll();
-               endSelection();
-               break;
-           }
-       }
-   };
-    canvas.ontouchcancel = function () {
-        stopAutoScroll();
+        canvas.onmousemove({
+            clientX: touch.clientX,
+            clientY: touch.clientY,
+            preventDefault: function () {}
+        });
+    }, { passive: false });
+    canvas.addEventListener("touchend", function (event) {
+        if (!touchEnabled) {
+            return;
+        }
+        event.preventDefault();
+        var touch = null;
+        var i;
+        for (i = 0; i < event.changedTouches.length; i++) {
+            if (event.changedTouches[i].identifier === selectionTouchId) {
+                touch = event.changedTouches[i];
+                break;
+            }
+        }
+        if (!touch) {
+            return;
+        }
+        canvas.onmouseup({
+            clientX: touch.clientX,
+            clientY: touch.clientY,
+            preventDefault: function () {}
+        });
         selectionTouchId = null;
-        selecting = false;
-    };
+    }, { passive: false });
+    canvas.addEventListener("touchcancel", function (event) {
+        if (!touchEnabled) {
+            return;
+        }
+        event.preventDefault();
+        selectionTouchId = null;
+        selecting = false;
+        stopAutoScroll();
+
+    }, { passive: false });
     /* Nettoyage */
     window.onbeforeunload = function () {
             if (worker) {
