@@ -58,14 +58,16 @@
       </div>
     </div>
   <button id="resetButton">Reset</button>
-  <label for="zoom">Zoom :</label>
+  <label>Zoom :</label>
+  <button data-action="zoomMinus" class="rangebtn multitouchbtn">−</button>
   <input type="range" id="zoom" min="25" max="500" value="100">
-  <span id="zoomValue">100%</span>
+  <button data-action="zoomPlus" class="rangebtn multitouchbtn">+</button>
+  <span id="zoomLabel">100%</span>
   <button class="scroll-btn" data-dir="left" data-target="imageContainer">←</button>
   <button class="scroll-btn" data-dir="right" data-target="imageContainer">→</button>
   <button class="scroll-btn" data-dir="up" data-target="imageContainer">↑</button>
   <button class="scroll-btn" data-dir="down" data-target="imageContainer">↓</button>
-    <label for="language">Langue :</label>
+    <label>Langue :</label>
     <select id="language">
       <option value="fra">Français</option>
       <option value="eng">Anglais</option>
@@ -112,7 +114,7 @@ function copyPopupResultText(){var btn=document.activeElement;copyTextarea("popu
     var status = document.getElementById("status");
     var result = document.getElementById("output");
     var zoom = document.getElementById("zoom");
-    var zoomValue = document.getElementById("zoomValue");
+    var zoomLabel = document.getElementById("zoomLabel");
     var imageContainer = document.getElementById("imageContainer");
     var canvas = document.getElementById("imageCanvas");
     var selectionCanvas = document.getElementById("selectionCanvas");
@@ -222,7 +224,7 @@ function copyPopupResultText(){var btn=document.activeElement;copyTextarea("popu
                 selection = null;
                 zoom.value = 100;
                 scale = 1;
-                zoomValue.innerHTML = "100%";
+                zoomLabel.innerHTML = "100%";
                 drawImage();
                 drawSelection();
                 setStatus("Image chargée.");
@@ -269,14 +271,14 @@ function copyPopupResultText(){var btn=document.activeElement;copyTextarea("popu
         drawSelection();
     }
     /* Zoom */
-    function updateZoom() {
+    function applyZoom() {
         var value = parseInt(zoom.value, 10);
         var width;
         var height;
         if (!value) {
             value = 100;
         }
-        zoomValue.innerHTML = value + "%";
+        zoomLabel.innerHTML = value + "%";
         if (!imageLoaded) {
             return;
         }
@@ -576,14 +578,14 @@ function copyPopupResultText(){var btn=document.activeElement;copyTextarea("popu
     imageFile.onchange = function () {
         loadImage();
     };
-    zoom.oninput = updateZoom;
+    zoom.oninput = applyZoom;
     zoom.onchange = function () {
         var value = parseInt(zoom.value, 10);
         if (!value) {
             value = 100;
         }
         scale = value / 100;
-        updateZoom();
+        applyZoom();
     };
     ocrButton.onclick = function () {
         runOCR(false);
