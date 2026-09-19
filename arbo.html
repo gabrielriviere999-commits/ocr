@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Arborescence</title>
+<link rel="icon" href="favicon.png" type="image/png">
+<style>
+body{background:black;color:#f44;font-family:monospace;}
+pre.tree{padding:5px;}
+.folder{color:#f00;}
+.file{color:#f44;text-decoration:none;}
+.file:hover{text-decoration:underline;}
+.ascii{color:#f44;}
+</style>
+</head>
+<body>
+<p>Dossiers : 4, Fichiers : 11</p>
+<pre class="tree">
+<span class="folder">ocr/</span>
+<span class="ascii">├── </span><span class="folder">libs/</span>
+<span class="ascii">│   └── </span><span class="folder">tesseract/</span>
+<span class="ascii">│       ├── </span><span class="folder">core/</span>
+<span class="ascii">│       │   ├── </span><a class="file" href="libs/tesseract/core/tesseract-core-lstm.wasm.js">tesseract-core-lstm.wasm.js</a><a class="file" href="libs/tesseract/core/tesseract-core-lstm.wasm.js" download> [↓] </a>
+<span class="ascii">│       │   ├── </span><a class="file" href="libs/tesseract/core/tesseract-core-simd-lstm.wasm.js">tesseract-core-simd-lstm.wasm.js</a><a class="file" href="libs/tesseract/core/tesseract-core-simd-lstm.wasm.js" download> [↓] </a>
+<span class="ascii">│       │   ├── </span><a class="file" href="libs/tesseract/core/tesseract-core-simd.wasm.js">tesseract-core-simd.wasm.js</a><a class="file" href="libs/tesseract/core/tesseract-core-simd.wasm.js" download> [↓] </a>
+<span class="ascii">│       │   └── </span><a class="file" href="libs/tesseract/core/tesseract-core.wasm.js">tesseract-core.wasm.js</a><a class="file" href="libs/tesseract/core/tesseract-core.wasm.js" download> [↓] </a>
+<span class="ascii">│       ├── </span><a class="file" href="libs/tesseract/tesseract.min.js">tesseract.min.js</a><a class="file" href="libs/tesseract/tesseract.min.js" download> [↓] </a>
+<span class="ascii">│       └── </span><a class="file" href="libs/tesseract/worker.min.js">worker.min.js</a><a class="file" href="libs/tesseract/worker.min.js" download> [↓] </a>
+<span class="ascii">├── </span><span class="folder">tessdata/</span>
+<span class="ascii">│   ├── </span><a class="file" href="tessdata/eng.traineddata.gz">eng.traineddata.gz</a><a class="file" href="tessdata/eng.traineddata.gz" download> [↓] </a>
+<span class="ascii">│   └── </span><a class="file" href="tessdata/fra.traineddata.gz">fra.traineddata.gz</a><a class="file" href="tessdata/fra.traineddata.gz" download> [↓] </a>
+<span class="ascii">├── </span><a class="file" href="index.html">index.html</a><a class="file" href="index.html" download> [↓] </a>
+<span class="ascii">├── </span><a class="file" href="install_tesseract.py">install_tesseract.py</a><a class="file" href="install_tesseract.py" download> [↓] </a>
+<span class="ascii">└── </span><a class="file" href="make-arbo.py">make-arbo.py</a><a class="file" href="make-arbo.py" download> [↓] </a>
+</pre>
+<button id="copyarbo" style="background:#000;color:#ccc;border:none;cursor:pointer;">[Copier]</button>
+<br><textarea wrap="off" id="arbo" style="width:100%;height:200px;box-sizing:border-box;background:#000;color:#ccc;border:2px groove #888;font-family:monospace;">
+ocr/
+├── libs/
+│   └── tesseract/
+│       ├── core/
+│       │   ├── tesseract-core-lstm.wasm.js
+│       │   ├── tesseract-core-simd-lstm.wasm.js
+│       │   ├── tesseract-core-simd.wasm.js
+│       │   └── tesseract-core.wasm.js
+│       ├── tesseract.min.js
+│       └── worker.min.js
+├── tessdata/
+│   ├── eng.traineddata.gz
+│   └── fra.traineddata.gz
+├── index.html
+├── install_tesseract.py
+└── make-arbo.py
+</textarea>
+<script>function copyFrom(id,btn){var code=document.getElementById(id);var temp=document.createElement("textarea");temp.value=code.value;document.body.appendChild(temp);temp.select();try{document.execCommand("copy");}catch(err){}document.body.removeChild(temp);btn.focus();}document.getElementById("copyarbo").onclick=function(e){copyFrom("arbo",e.target);};</script>
+</body>
+</html>
