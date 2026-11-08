@@ -59,9 +59,9 @@
     </div>
   <button id="resetButton">Reset</button>
   <label>Zoom :</label>
-  <button data-action="zoomMinus" class="rangebtn multitouchbtn">−</button>
+  <button type="button" onclick="changeSlider('zoom', -20)" class="rangebtn">−</button>
   <input type="range" id="zoom" min="25" max="500" value="100">
-  <button data-action="zoomPlus" class="rangebtn multitouchbtn">+</button>
+  <button type="button" onclick="changeSlider('zoom', 20)" class="rangebtn">+</button>
   <span id="zoomLabel">100%</span>
   <button class="scroll-btn" data-dir="left" data-target="imageContainer">←</button>
   <button class="scroll-btn" data-dir="right" data-target="imageContainer">→</button>
@@ -93,16 +93,14 @@
   <b class="titleb">Texte reconnu</b><hr class="titlehr">
   <textarea id="popupResultText" wrap="off"></textarea>
   <div style="margin-top:5px;">
-    <button data-action="copyPopupResultText">Copier</button><hr>
-    <button data-action="closePopup">Fermer</button>
+    <button onclick="copyPopupResultText()">Copier</button><hr>
+    <button onclick="closePopup()">Fermer</button>
   </div>
 </div>
 <script src="../outils/outils.js"></script>
 <script src="../outils/popup.js"></script>
-<script src="../outils/multitouch.js"></script>
 <script src="libs/tesseract/tesseract.min.js"></script>
 <script>
-addMultiTouch("#popupResultContent button");
 function copyPopupResultText(){var btn=document.activeElement;copyTextarea("popupResultText", btn);setTimeout(function(){btn.focus();},0);}
 (function () {
     "use strict";
